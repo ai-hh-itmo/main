@@ -4,7 +4,7 @@ from typing import Dict, List
 
 import numpy as np
 import pickle
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 
@@ -64,9 +64,10 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Matcher Service", lifespan=lifespan)
+router = APIRouter(prefix="/api/v1/matcher")
 
 
-@app.post("/add_candidate")
+@router.post("/add_candidate")
 def add_candidate(payload: AddCandidateRequest):
     vector = np.asarray(payload.vector, dtype=np.float64)
 
@@ -86,7 +87,7 @@ def add_candidate(payload: AddCandidateRequest):
     return {"status": "ok", "candidate_id": payload.candidate_id}
 
 
-@app.post("/match", response_model=MatchResponse)
+@router.post("/match", response_model=MatchResponse)
 def match(payload: MatchRequest):
     if not candidate_embeddings:
         return MatchResponse(matches=[])
@@ -127,3 +128,6 @@ def match(payload: MatchRequest):
         for i in top_indices
     ]
     return MatchResponse(matches=results)
+
+
+app.include_router(router)

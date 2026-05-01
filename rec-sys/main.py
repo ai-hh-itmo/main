@@ -5,7 +5,7 @@ from typing import List
 
 import pandas as pd
 from catboost import CatBoostClassifier
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from pydantic import BaseModel, Field
 
 
@@ -57,9 +57,10 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Rec-Sys Service", version="1.0.0", lifespan=lifespan)
+router = APIRouter(prefix="/api/v1/rec-sys")
 
 
-@app.post("/rank", response_model=RecSysResponse)
+@router.post("/rank", response_model=RecSysResponse)
 def rank_candidates(payload: RecSysRequest) -> RecSysResponse:
     if model is None or features_df is None:
         return RecSysResponse(top_candidates=[])
@@ -85,3 +86,6 @@ def rank_candidates(payload: RecSysRequest) -> RecSysResponse:
 
     ranked.sort(key=lambda item: item.final_score, reverse=True)
     return RecSysResponse(top_candidates=ranked[: payload.top_n])
+
+
+app.include_router(router)

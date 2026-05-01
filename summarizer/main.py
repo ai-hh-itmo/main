@@ -1,7 +1,7 @@
 import os
 
 import openai
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -30,9 +30,10 @@ class SummarizerResponse(BaseModel):
 
 
 app = FastAPI(title="Summarizer Service", version="1.0.0")
+router = APIRouter(prefix="/api/v1/summarizer")
 
 
-@app.post("/summarize", response_model=SummarizerResponse)
+@router.post("/summarize", response_model=SummarizerResponse)
 def summarize(payload: SummarizerRequest) -> SummarizerResponse:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -61,4 +62,7 @@ def summarize(payload: SummarizerRequest) -> SummarizerResponse:
         raise HTTPException(status_code=502, detail="LLM returned an empty summary")
 
     return SummarizerResponse(summary=summary)
+
+
+app.include_router(router)
 

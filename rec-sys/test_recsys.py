@@ -59,7 +59,7 @@ def main() -> None:
         "top_n": 10,
     }
     print("Calling /rank with 26 candidates (including unknown candidate_id)...")
-    response = post_json("/rank", payload)
+    response = post_json("/api/v1/rec-sys/rank", payload)
     validate_response(response, payload["top_n"])
 
     print("Response is valid.")

@@ -32,12 +32,12 @@ def main() -> None:
             "candidate_id": f"candidate_{idx + 1}",
             "vector": random_vector(VECTOR_SIZE),
         }
-        result = post_json("/add_candidate", payload)
+        result = post_json("/api/v1/matcher/add_candidate", payload)
         print("add_candidate:", result)
 
     vacancy_vector = random_vector(VECTOR_SIZE)
     print("\nRunning /match...")
-    match_result = post_json("/match", {"vacancy_vector": vacancy_vector})
+    match_result = post_json("/api/v1/matcher/match", {"vacancy_vector": vacancy_vector})
     print(json.dumps(match_result, indent=2, ensure_ascii=False))
 
 
