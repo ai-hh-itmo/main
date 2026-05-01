@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Circle, CircleDashed, TriangleAlert } from "lucide-react";
+import { CircleDashed, TriangleAlert } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { Dictionary } from "@/lib/i18n";
@@ -31,7 +31,6 @@ export function ResultsPanel({ data, error, isPending, t }: ResultsPanelProps) {
             <p className="text-sm font-medium tracking-[-0.02em]">{t.results.title}</p>
             <p className="mt-1 text-xs text-muted">{t.results.subtitle}</p>
           </div>
-          <StatusPill data={data} error={error} isPending={isPending} t={t} />
         </div>
       </CardHeader>
 
@@ -134,33 +133,5 @@ export function ResultsPanel({ data, error, isPending, t }: ResultsPanelProps) {
         </AnimatePresence>
       </CardContent>
     </Card>
-  );
-}
-
-function StatusPill({ data, error, isPending, t }: ResultsPanelProps) {
-  if (isPending) {
-    return <Pill label={t.results.statuses.processing} tone="neutral" />;
-  }
-
-  if (error) {
-    return <Pill label={t.results.statuses.attention} tone="danger" />;
-  }
-
-  if (data) {
-    return <Pill label={t.results.statuses.ready} tone="success" />;
-  }
-
-  return <Pill label={t.results.statuses.idle} tone="neutral" />;
-}
-
-function Pill({ label, tone }: { label: string; tone: "danger" | "neutral" | "success" }) {
-  const iconClass =
-    tone === "success" ? "text-success" : tone === "danger" ? "text-danger" : "text-faint";
-
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1 text-xs font-medium text-muted">
-      <Circle className={`size-2.5 fill-current ${iconClass}`} aria-hidden />
-      {label}
-    </span>
   );
 }
