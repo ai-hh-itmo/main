@@ -22,10 +22,51 @@ services:
       REQUEST_TIMEOUT: "${REQUEST_TIMEOUT:-10s}"
       RETRY_COUNT: "${RETRY_COUNT:-2}"
       RETRY_DELAY: "${RETRY_DELAY:-500ms}"
-      SUMMARIZER_URL: "${SUMMARIZER_URL:-http://host.docker.internal:8000}"
-      EMBEDDER_URL: "${EMBEDDER_URL:-http://host.docker.internal:8001}"
-      MATCHER_URL: "${MATCHER_URL:-http://host.docker.internal:8002}"
-      RECSYS_URL: "${RECSYS_URL:-http://host.docker.internal:8003}"
+      SUMMARIZER_URL: "${SUMMARIZER_URL:-http://summarizer:8000}"
+      EMBEDDER_URL: "${EMBEDDER_URL:-http://embedder:8000}"
+      MATCHER_URL: "${MATCHER_URL:-http://matcher:8000}"
+      RECSYS_URL: "${RECSYS_URL:-http://rec-sys:8004}"
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      - summarizer
+      - embedder
+      - matcher
+      - rec-sys
+    restart: unless-stopped
+
+  summarizer:
+    build:
+      context: ./summarizer
+      dockerfile: Dockerfile
+    environment:
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_BASE_URL: "${OPENAI_BASE_URL:-https://api.vsellm.ru/v1}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-deepseek/deepseek-v3.2}"
+    ports:
+      - "${SUMMARIZER_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  embedder:
+    build:
+      context: ./embedder
+      dockerfile: Dockerfile
+    ports:
+      - "${EMBEDDER_PORT:-8001}:8000"
+    restart: unless-stopped
+
+  matcher:
+    build:
+      context: ./matcher
+      dockerfile: Dockerfile
+    ports:
+      - "${MATCHER_PORT:-8002}:8000"
+    restart: unless-stopped
+
+  rec-sys:
+    build:
+      context: ./rec-sys
+      dockerfile: Dockerfile
+    ports:
+      - "${RECSYS_PORT:-8003}:8004"
     restart: unless-stopped

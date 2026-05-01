@@ -11,6 +11,7 @@ class EmbedderRequest(BaseModel):
 
 
 class EmbedderResponse(BaseModel):
+    embedding: List[float]
     vector: List[float]
 
 
@@ -34,7 +35,7 @@ async def embed_text(request: EmbedderRequest) -> EmbedderResponse:
         raise HTTPException(status_code=503, detail="Model is not loaded yet")
 
     embedding = model.encode([request.text])[0].tolist()
-    return EmbedderResponse(vector=embedding)
+    return EmbedderResponse(embedding=embedding, vector=embedding)
 
 
 app.include_router(router)

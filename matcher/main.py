@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Dict, List
 
+import hashlib
 import numpy as np
 import pickle
 from fastapi import APIRouter, FastAPI, HTTPException
@@ -9,11 +10,15 @@ from pydantic import BaseModel, Field
 
 
 EMBEDDINGS_PATH = Path("embeddings.pkl")
+DEFAULT_VECTOR_SIZE = 384
+DEFAULT_CANDIDATE_COUNT = 100
 candidate_embeddings: Dict[str, np.ndarray] = {}
 
 
 class MatchRequest(BaseModel):
-    vacancy_vector: List[float] = Field(..., min_length=1)
+    vacancy_embedding: List[float] | None = Field(default=None, min_length=1)
+    vacancy_vector: List[float] | None = Field(default=None, min_length=1)
+    top_k: int = Field(default=1000, ge=1)
 
 
 class MatchResult(BaseModel):
@@ -22,6 +27,7 @@ class MatchResult(BaseModel):
 
 
 class MatchResponse(BaseModel):
+    candidates: List[MatchResult]
     matches: List[MatchResult]
 
 
@@ -56,10 +62,25 @@ def load_embeddings() -> Dict[str, np.ndarray]:
     return loaded
 
 
+def build_default_embeddings() -> Dict[str, np.ndarray]:
+    embeddings: Dict[str, np.ndarray] = {}
+    for idx in range(1, DEFAULT_CANDIDATE_COUNT + 1):
+        candidate_id = f"cand_{idx:03d}"
+        seed = int.from_bytes(
+            hashlib.sha256(candidate_id.encode("utf-8")).digest()[:8],
+            "big",
+        )
+        rng = np.random.default_rng(seed)
+        embeddings[candidate_id] = rng.normal(size=DEFAULT_VECTOR_SIZE)
+    return embeddings
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     global candidate_embeddings
     candidate_embeddings = load_embeddings()
+    if not candidate_embeddings:
+        candidate_embeddings = build_default_embeddings()
     yield
 
 
@@ -90,9 +111,13 @@ def add_candidate(payload: AddCandidateRequest):
 @router.post("/match", response_model=MatchResponse)
 def match(payload: MatchRequest):
     if not candidate_embeddings:
-        return MatchResponse(matches=[])
+        return MatchResponse(candidates=[], matches=[])
 
-    vacancy_vector = np.asarray(payload.vacancy_vector, dtype=np.float64)
+    vector = payload.vacancy_embedding or payload.vacancy_vector
+    if vector is None:
+        raise HTTPException(status_code=400, detail="vacancy_embedding is required.")
+
+    vacancy_vector = np.asarray(vector, dtype=np.float64)
     if vacancy_vector.ndim != 1 or vacancy_vector.size == 0:
         raise HTTPException(status_code=400, detail="vacancy_vector must be 1D and non-empty.")
 
@@ -118,7 +143,7 @@ def match(payload: MatchRequest):
     similarities[valid_mask] = dot_products[valid_mask] / denominator[valid_mask]
 
     sorted_indices = np.argsort(-similarities)
-    top_indices = sorted_indices[:1000]
+    top_indices = sorted_indices[: payload.top_k]
 
     results = [
         MatchResult(
@@ -127,7 +152,7 @@ def match(payload: MatchRequest):
         )
         for i in top_indices
     ]
-    return MatchResponse(matches=results)
+    return MatchResponse(candidates=results, matches=results)
 
 
 app.include_router(router)

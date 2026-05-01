@@ -37,10 +37,7 @@ router = APIRouter(prefix="/api/v1/summarizer")
 def summarize(payload: SummarizerRequest) -> SummarizerResponse:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="OPENAI_API_KEY is not configured",
-        )
+        return SummarizerResponse(summary=payload.vacancy_text.strip())
 
     base_url = os.getenv("OPENAI_BASE_URL", "https://api.vsellm.ru/v1")
     model = os.getenv("OPENAI_MODEL", "deepseek/deepseek-v3.2")

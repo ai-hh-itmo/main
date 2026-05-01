@@ -39,8 +39,8 @@ FEATURE_COLUMNS = ["has_contacted", "has_replied", "history_appearances", "exp_y
 async def lifespan(_: FastAPI):
     global model, features_df
 
-    model_path = "catboost_model.cbm"
-    csv_path = "candidates_features.csv"
+    model_path = Path("catboost_model.cbm")
+    csv_path = Path("candidates_features.csv")
 
     if not model_path.exists():
         raise FileNotFoundError(f"Model file not found: {model_path}")
