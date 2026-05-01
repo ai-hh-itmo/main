@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +27,7 @@ func (h *Handler) recommend(c *gin.Context) {
 	if err != nil {
 		h.metrics.ObserveHTTP(true)
 		logger.Error("recommendation failed", "request_id", requestID, "err", err, "duration", time.Since(start))
-		c.JSON(502, model.ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadGateway, model.ErrorResponse{Error: "recommendation service is temporarily unavailable"})
 		return
 	}
 

@@ -10,8 +10,8 @@ import (
 )
 
 type Client struct {
-	httpClient    *resty.Client
-	services      config.ServicesConfig
+	httpClient *resty.Client
+	services   config.ServicesConfig
 }
 
 func New(cfg config.ClientConfig, services config.ServicesConfig) *Client {
@@ -28,8 +28,8 @@ func New(cfg config.ClientConfig, services config.ServicesConfig) *Client {
 	}
 
 	return &Client{
-		httpClient:    httpClient,
-		services:      services,
+		httpClient: httpClient,
+		services:   services,
 	}
 }
 
