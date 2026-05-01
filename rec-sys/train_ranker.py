@@ -23,9 +23,8 @@ def make_target(df: pd.DataFrame, seed: int = 42) -> pd.Series:
 
 
 def main() -> None:
-    script_dir = Path(__file__).resolve().parent
-    data_path = script_dir.parent / "candidates_features.csv"
-    model_path = script_dir / "catboost_model.cbm"
+    data_path = "candidates_features.csv"
+    model_path = "catboost_model.cbm"
 
     df = pd.read_csv(data_path)
     df["target"] = make_target(df)
