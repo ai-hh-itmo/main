@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+import type { Dictionary } from "@/lib/i18n";
+
+export function createRecommendationSchema(t: Dictionary) {
+  return z.object({
+    vacancy_text: z
+      .string()
+      .trim()
+      .min(24, t.validation.vacancyMin)
+      .max(12000, t.validation.vacancyMax),
+    top_n: z.coerce.number().int().min(1).max(500).default(20),
+    top_k: z.coerce.number().int().min(1).max(50000).default(1000),
+  });
+}
+
 export const recommendationSchema = z.object({
   vacancy_text: z
     .string()

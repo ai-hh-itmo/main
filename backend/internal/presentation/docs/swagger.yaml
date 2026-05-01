@@ -1,0 +1,124 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  model.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  model.FinalCandidate:
+    properties:
+      candidate_id:
+        type: string
+      final_score:
+        type: number
+    type: object
+  model.RecommendationRequest:
+    properties:
+      top_k:
+        type: integer
+      top_n:
+        type: integer
+      vacancy_text:
+        type: string
+    type: object
+  model.RecommendationResponse:
+    properties:
+      top_candidates:
+        items:
+          $ref: '#/definitions/model.FinalCandidate'
+        type: array
+    type: object
+info:
+  contact: {}
+  description: Go orchestrator API for vacancy-based candidate recommendations.
+  title: Talentmine Backend API
+  version: 0.1.0
+paths:
+  /api/v1/recommendations:
+    post:
+      consumes:
+      - application/json
+      description: Runs the recommendation pipeline and returns ranked candidates
+        for a vacancy.
+      parameters:
+      - description: Optional correlation ID
+        in: header
+        name: X-Request-Id
+        type: string
+      - description: Recommendation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.RecommendationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Correlation ID
+              type: string
+          schema:
+            $ref: '#/definitions/model.RecommendationResponse'
+        "400":
+          description: Bad Request
+          headers:
+            X-Request-Id:
+              description: Correlation ID
+              type: string
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          headers:
+            X-Request-Id:
+              description: Correlation ID
+              type: string
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Create candidate recommendations
+      tags:
+      - Recommendations
+  /health:
+    get:
+      description: Returns service health status.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Correlation ID
+              type: string
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - System
+  /metrics:
+    get:
+      description: Returns Prometheus exposition metrics.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Prometheus metrics
+          headers:
+            X-Request-Id:
+              description: Correlation ID
+              type: string
+          schema:
+            type: string
+      summary: Prometheus metrics
+      tags:
+      - System
+produces:
+- application/json
+swagger: "2.0"

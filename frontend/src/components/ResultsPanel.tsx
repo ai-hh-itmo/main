@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Circle, CircleDashed, TriangleAlert } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import type { Dictionary } from "@/lib/i18n";
 import type { ApiErrorResponse, RecommendationResponse } from "@/lib/types";
 import { formatScore, toPercent } from "@/lib/utils";
 
@@ -11,21 +12,26 @@ type ResultsPanelProps = {
   data?: RecommendationResponse;
   error?: ApiErrorResponse | null;
   isPending: boolean;
+  t: Dictionary;
 };
 
-export function ResultsPanel({ data, error, isPending }: ResultsPanelProps) {
+export function ResultsPanel({ data, error, isPending, t }: ResultsPanelProps) {
   const candidates = data?.top_candidates ?? [];
   const maxScore = Math.max(...candidates.map((candidate) => candidate.final_score), 0);
+  const errorMessage =
+    error?.error === "recommendation service is temporarily unavailable"
+      ? t.errors.serviceUnavailable
+      : error?.error;
 
   return (
     <Card className="min-h-[32rem] overflow-hidden rounded-[24px] bg-panel/82 lg:min-h-full">
       <CardHeader className="p-4 pb-0 sm:p-5 sm:pb-0">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium tracking-[-0.02em]">Output</p>
-            <p className="mt-1 text-xs text-muted">Ranked candidates from backend pipeline</p>
+            <p className="text-sm font-medium tracking-[-0.02em]">{t.results.title}</p>
+            <p className="mt-1 text-xs text-muted">{t.results.subtitle}</p>
           </div>
-          <StatusPill data={data} error={error} isPending={isPending} />
+          <StatusPill data={data} error={error} isPending={isPending} t={t} />
         </div>
       </CardHeader>
 
@@ -59,11 +65,11 @@ export function ResultsPanel({ data, error, isPending }: ResultsPanelProps) {
               <div className="flex items-start gap-3">
                 <TriangleAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
                 <div className="space-y-2">
-                  <p className="font-medium">Recommendation failed</p>
-                  <p className="text-[oklch(44%_0.12_28)]">{error.error}</p>
+                  <p className="font-medium">{t.results.failedTitle}</p>
+                  <p className="text-[oklch(44%_0.12_28)]">{errorMessage}</p>
                   {error.request_id ? (
                     <p className="font-mono text-xs text-[oklch(50%_0.06_28)]">
-                      request {error.request_id}
+                      {t.results.request} {error.request_id}
                     </p>
                   ) : null}
                 </div>
@@ -104,7 +110,9 @@ export function ResultsPanel({ data, error, isPending }: ResultsPanelProps) {
                 </motion.article>
               ))}
               {data?.request_id ? (
-                <p className="pt-2 font-mono text-xs text-muted">request {data.request_id}</p>
+                <p className="pt-2 font-mono text-xs text-muted">
+                  {t.results.request} {data.request_id}
+                </p>
               ) : null}
             </motion.div>
           ) : (
@@ -117,10 +125,10 @@ export function ResultsPanel({ data, error, isPending }: ResultsPanelProps) {
               transition={{ duration: 0.2 }}
             >
               <CircleDashed className="size-8 text-faint" aria-hidden />
-              <p className="mt-5 text-sm font-medium tracking-[-0.02em]">No run yet</p>
-              <p className="mt-2 max-w-sm text-sm leading-6 text-muted">
-                Submit a vacancy to see ranked candidate IDs and scores here.
+              <p className="mt-5 text-sm font-medium tracking-[-0.02em]">
+                {t.results.emptyTitle}
               </p>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-muted">{t.results.emptyDescription}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -129,20 +137,20 @@ export function ResultsPanel({ data, error, isPending }: ResultsPanelProps) {
   );
 }
 
-function StatusPill({ data, error, isPending }: ResultsPanelProps) {
+function StatusPill({ data, error, isPending, t }: ResultsPanelProps) {
   if (isPending) {
-    return <Pill label="Processing" tone="neutral" />;
+    return <Pill label={t.results.statuses.processing} tone="neutral" />;
   }
 
   if (error) {
-    return <Pill label="Needs attention" tone="danger" />;
+    return <Pill label={t.results.statuses.attention} tone="danger" />;
   }
 
   if (data) {
-    return <Pill label="Ready" tone="success" />;
+    return <Pill label={t.results.statuses.ready} tone="success" />;
   }
 
-  return <Pill label="Idle" tone="neutral" />;
+  return <Pill label={t.results.statuses.idle} tone="neutral" />;
 }
 
 function Pill({ label, tone }: { label: string; tone: "danger" | "neutral" | "success" }) {

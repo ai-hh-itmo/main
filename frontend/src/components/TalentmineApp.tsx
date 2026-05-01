@@ -3,16 +3,28 @@
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { PanelLeft } from "lucide-react";
+import { useState } from "react";
 
 import { HealthBadge } from "@/components/HealthBadge";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { RecommendationForm } from "@/components/RecommendationForm";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { Card, CardContent } from "@/components/ui/card";
 import { createRecommendations } from "@/lib/api";
+import { defaultLanguage, dictionaries, type Language } from "@/lib/i18n";
 import type { ApiErrorResponse, RecommendationResponse } from "@/lib/types";
 import type { RecommendationPayload } from "@/lib/schemas";
 
 export function TalentmineApp() {
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window === "undefined") {
+      return defaultLanguage;
+    }
+
+    const storedLanguage = window.localStorage.getItem("talentmine-language");
+    return storedLanguage === "ru" || storedLanguage === "en" ? storedLanguage : defaultLanguage;
+  });
+  const t = dictionaries[language];
   const mutation = useMutation<
     RecommendationResponse,
     ApiErrorResponse,
@@ -20,6 +32,11 @@ export function TalentmineApp() {
   >({
     mutationFn: createRecommendations,
   });
+
+  function handleLanguageChange(nextLanguage: Language) {
+    setLanguage(nextLanguage);
+    window.localStorage.setItem("talentmine-language", nextLanguage);
+  }
 
   return (
     <main className="min-h-screen px-3 py-3 text-ink sm:px-5 sm:py-5">
@@ -30,9 +47,16 @@ export function TalentmineApp() {
               <PanelLeft className="size-3.5 text-muted" aria-hidden />
             </span>
             <span className="font-medium tracking-[-0.02em]">Talentmine</span>
-            <span className="hidden text-muted sm:inline">/ recommendation console</span>
+            <span className="hidden text-muted sm:inline">{t.app.console}</span>
           </div>
-          <HealthBadge />
+          <div className="flex items-center gap-2">
+            <LanguageToggle
+              labels={t.language}
+              language={language}
+              onChange={handleLanguageChange}
+            />
+            <HealthBadge t={t} />
+          </div>
         </div>
 
         <section className="grid flex-1 gap-px bg-line lg:grid-cols-[minmax(22rem,0.86fr)_minmax(0,1.14fr)]">
@@ -46,6 +70,8 @@ export function TalentmineApp() {
               <CardContent className="p-4 sm:p-5">
                 <RecommendationForm
                   isPending={mutation.isPending}
+                  key={language}
+                  t={t}
                   onSubmit={(values) => mutation.mutate(values)}
                 />
               </CardContent>
@@ -62,6 +88,7 @@ export function TalentmineApp() {
               data={mutation.data}
               error={mutation.error ?? null}
               isPending={mutation.isPending}
+              t={t}
             />
           </motion.section>
         </section>

@@ -10,14 +10,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ai-hh-itmo/backend/internal/api"
 	"github.com/ai-hh-itmo/backend/internal/config"
 	"github.com/ai-hh-itmo/backend/internal/logger"
 	"github.com/ai-hh-itmo/backend/internal/ml"
 	"github.com/ai-hh-itmo/backend/internal/observability"
+	"github.com/ai-hh-itmo/backend/internal/presentation/api"
 	"github.com/ai-hh-itmo/backend/internal/service"
 )
 
+// @title Talentmine Backend API
+// @version 0.1.0
+// @description Go orchestrator API for vacancy-based candidate recommendations.
+// @BasePath /
+// @produce json
+// @accept json
 func main() {
 	cfg := config.Load()
 	metrics := observability.NewMetrics()

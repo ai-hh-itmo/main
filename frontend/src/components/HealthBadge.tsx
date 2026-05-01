@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity, WifiOff } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import type { Dictionary } from "@/lib/i18n";
 import { fetchHealth } from "@/lib/api";
 
-export function HealthBadge() {
+export function HealthBadge({ t }: { t: Dictionary }) {
   const { data, isError, isLoading } = useQuery({
     queryKey: ["backend-health"],
     queryFn: fetchHealth,
@@ -22,7 +23,7 @@ export function HealthBadge() {
       ) : (
         <WifiOff className="size-3.5 text-danger" aria-hidden />
       )}
-      <span>{isLoading ? "Checking backend" : online ? "Backend online" : "Backend offline"}</span>
+      <span>{isLoading ? t.health.checking : online ? t.health.online : t.health.offline}</span>
     </Badge>
   );
 }

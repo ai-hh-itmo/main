@@ -92,3 +92,35 @@ func TestRecommendHandlerUpstreamError(t *testing.T) {
 		t.Fatalf("response leaked internal error: %s", rec.Body.String())
 	}
 }
+
+func TestDocsRoutes(t *testing.T) {
+	h := NewHandler(fakeRecommendationService{}, observability.NewMetrics())
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	h.Register(router)
+
+	openAPIReq := httptest.NewRequest(http.MethodGet, "/openapi.json", nil)
+	openAPIRec := httptest.NewRecorder()
+	router.ServeHTTP(openAPIRec, openAPIReq)
+
+	if openAPIRec.Code != http.StatusOK {
+		t.Fatalf("expected openapi 200, got %d", openAPIRec.Code)
+	}
+	if got := openAPIRec.Header().Get("Content-Type"); !strings.Contains(got, "application/json") {
+		t.Fatalf("expected json content type, got %q", got)
+	}
+	if !strings.Contains(openAPIRec.Body.String(), `"swagger"`) {
+		t.Fatalf("expected generated swagger spec, got %s", openAPIRec.Body.String())
+	}
+
+	swaggerReq := httptest.NewRequest(http.MethodGet, "/swagger/index.html", nil)
+	swaggerRec := httptest.NewRecorder()
+	router.ServeHTTP(swaggerRec, swaggerReq)
+
+	if swaggerRec.Code != http.StatusOK {
+		t.Fatalf("expected swagger 200, got %d", swaggerRec.Code)
+	}
+	if !strings.Contains(swaggerRec.Body.String(), "Swagger UI") {
+		t.Fatalf("expected swagger ui html, got %s", swaggerRec.Body.String())
+	}
+}

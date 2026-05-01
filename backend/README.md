@@ -17,7 +17,7 @@ HTTP layer is built with Gin and supports graceful shutdown on `SIGINT`/`SIGTERM
 ## Run
 
 ```bash
-go run ./cmd/server
+go run .
 ```
 
 ## Environment Variables
