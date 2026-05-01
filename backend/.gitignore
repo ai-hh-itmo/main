@@ -1,0 +1,38 @@
+# Binaries (common local build outputs)
+/backend
+/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test / coverage
+*.test
+*.out
+coverage.*
+profile.cov
+
+# Go workspace (optional)
+vendor/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug / build artifacts
+dist/
+bin/
+tmp/
