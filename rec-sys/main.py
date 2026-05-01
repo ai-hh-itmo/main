@@ -3,9 +3,11 @@ import logging
 from pathlib import Path
 from typing import List
 
+import json
+
 import pandas as pd
 from catboost import CatBoostClassifier
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 
@@ -28,19 +30,31 @@ class RecSysResponse(BaseModel):
     top_candidates: List[FinalCandidate] = Field(..., description="Финальная выдача для фронтенда")
 
 
+class CandidateDetails(BaseModel):
+    candidate_id: str
+    resume: str | None = None
+    has_contacted: bool | None = None
+    has_replied: bool | None = None
+    history_appearances: int | None = None
+    exp_years: int | None = None
+    salary_expectation: float | None = None
+
+
 logger = logging.getLogger("rec-sys")
 model: CatBoostClassifier | None = None
 features_df: pd.DataFrame | None = None
+resumes: dict[str, str] = {}
 
 FEATURE_COLUMNS = ["has_contacted", "has_replied", "history_appearances", "exp_years"]
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    global model, features_df
+    global model, features_df, resumes
 
     model_path = Path("catboost_model.cbm")
     csv_path = Path("candidates_features.csv")
+    resumes_path = Path("mock_resumes.json")
 
     if not model_path.exists():
         raise FileNotFoundError(f"Model file not found: {model_path}")
@@ -53,6 +67,11 @@ async def lifespan(_: FastAPI):
 
     loaded_df = pd.read_csv(csv_path).set_index("candidate_id")
     features_df = loaded_df
+    if resumes_path.exists():
+        with resumes_path.open("r", encoding="utf-8") as file:
+            loaded_resumes = json.load(file)
+        if isinstance(loaded_resumes, dict):
+            resumes = {str(key): str(value) for key, value in loaded_resumes.items()}
     yield
 
 
@@ -86,6 +105,26 @@ def rank_candidates(payload: RecSysRequest) -> RecSysResponse:
 
     ranked.sort(key=lambda item: item.final_score, reverse=True)
     return RecSysResponse(top_candidates=ranked[: payload.top_n])
+
+
+@router.get("/candidates/{candidate_id}", response_model=CandidateDetails)
+def get_candidate(candidate_id: str) -> CandidateDetails:
+    if features_df is None:
+        raise HTTPException(status_code=503, detail="Candidate features are not loaded")
+
+    if candidate_id not in features_df.index and candidate_id not in resumes:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    row = features_df.loc[candidate_id] if candidate_id in features_df.index else None
+    return CandidateDetails(
+        candidate_id=candidate_id,
+        resume=resumes.get(candidate_id),
+        has_contacted=bool(row["has_contacted"]) if row is not None else None,
+        has_replied=bool(row["has_replied"]) if row is not None else None,
+        history_appearances=int(row["history_appearances"]) if row is not None else None,
+        exp_years=int(row["exp_years"]) if row is not None else None,
+        salary_expectation=float(row["salary_expectation"]) if row is not None else None,
+    )
 
 
 app.include_router(router)

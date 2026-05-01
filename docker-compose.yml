@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     environment:
       BACKEND_URL: http://backend:8080
+      RECSYS_URL: http://rec-sys:8004
       NEXT_TELEMETRY_DISABLED: "1"
     ports:
       - "${FRONTEND_PORT:-3000}:3000"

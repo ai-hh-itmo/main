@@ -1,5 +1,6 @@
 import type {
   ApiErrorResponse,
+  CandidateDetails,
   HealthResponse,
   RecommendationRequest,
   RecommendationResponse,
@@ -43,4 +44,16 @@ export async function createRecommendations(payload: RecommendationRequest) {
   }
 
   return (await response.json()) as RecommendationResponse;
+}
+
+export async function fetchCandidateDetails(candidateID: string) {
+  const response = await fetch(`/api/candidates/${encodeURIComponent(candidateID)}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw await parseError(response);
+  }
+
+  return (await response.json()) as CandidateDetails;
 }
