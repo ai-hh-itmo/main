@@ -23,6 +23,7 @@ class RecSysRequest(BaseModel):
 
 class FinalCandidate(BaseModel):
     candidate_id: str
+    display_name: str
     final_score: float = Field(..., description="Итоговый скор рекомендательной системы")
 
 
@@ -32,6 +33,7 @@ class RecSysResponse(BaseModel):
 
 class CandidateDetails(BaseModel):
     candidate_id: str
+    display_name: str
     resume: str | None = None
     has_contacted: bool | None = None
     has_replied: bool | None = None
@@ -46,6 +48,70 @@ features_df: pd.DataFrame | None = None
 resumes: dict[str, str] = {}
 
 FEATURE_COLUMNS = ["has_contacted", "has_replied", "history_appearances", "exp_years"]
+FIRST_NAMES = [
+    "Александр",
+    "Дмитрий",
+    "Михаил",
+    "Андрей",
+    "Илья",
+    "Никита",
+    "Егор",
+    "Артем",
+    "София",
+    "Анна",
+    "Мария",
+    "Екатерина",
+    "Дарья",
+    "Полина",
+    "Виктория",
+    "Алина",
+]
+LAST_NAMES = [
+    "Иванов",
+    "Смирнов",
+    "Кузнецов",
+    "Попов",
+    "Соколов",
+    "Лебедев",
+    "Козлов",
+    "Новиков",
+    "Морозова",
+    "Волкова",
+    "Павлова",
+    "Семенова",
+    "Голубева",
+    "Виноградова",
+    "Богданова",
+    "Федорова",
+]
+MIDDLE_NAMES = [
+    "Алексеевич",
+    "Дмитриевич",
+    "Михайлович",
+    "Андреевич",
+    "Ильич",
+    "Никитич",
+    "Егорович",
+    "Артемович",
+    "Алексеевна",
+    "Дмитриевна",
+    "Михайловна",
+    "Андреевна",
+    "Ильинична",
+    "Никитична",
+    "Егоровна",
+    "Артемовна",
+]
+
+
+def candidate_display_name(candidate_id: str) -> str:
+    number = int("".join(char for char in candidate_id if char.isdigit()) or "0")
+    first_index = number % len(FIRST_NAMES)
+    gender_offset = 8 if first_index >= 8 else 0
+    first = FIRST_NAMES[first_index]
+    last = LAST_NAMES[gender_offset + ((number // len(FIRST_NAMES)) % 8)]
+    middle = MIDDLE_NAMES[gender_offset + ((number // (len(FIRST_NAMES) * 8)) % 8)]
+    return f"{last} {first} {middle}"
 
 
 @asynccontextmanager
@@ -99,6 +165,7 @@ def rank_candidates(payload: RecSysRequest) -> RecSysResponse:
         ranked.append(
             FinalCandidate(
                 candidate_id=candidate.candidate_id,
+                display_name=candidate_display_name(candidate.candidate_id),
                 final_score=final_score,
             )
         )
@@ -118,6 +185,7 @@ def get_candidate(candidate_id: str) -> CandidateDetails:
     row = features_df.loc[candidate_id] if candidate_id in features_df.index else None
     return CandidateDetails(
         candidate_id=candidate_id,
+        display_name=candidate_display_name(candidate_id),
         resume=resumes.get(candidate_id),
         has_contacted=bool(row["has_contacted"]) if row is not None else None,
         has_replied=bool(row["has_replied"]) if row is not None else None,

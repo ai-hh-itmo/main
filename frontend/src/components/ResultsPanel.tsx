@@ -162,6 +162,8 @@ function CandidateResult({
   maxScore,
   onToggle,
 }: CandidateResultProps) {
+  const displayName = details?.display_name ?? candidate.display_name ?? candidate.candidate_id;
+
   return (
     <motion.article
       animate={{ opacity: 1, y: 0 }}
@@ -179,8 +181,9 @@ function CandidateResult({
           <div className="min-w-0">
             <p className="font-mono text-xs text-muted">#{String(index + 1).padStart(2, "0")}</p>
             <h3 className="truncate text-base font-semibold tracking-[-0.02em]">
-              {candidate.candidate_id}
+              {displayName}
             </h3>
+            <p className="mt-0.5 font-mono text-xs text-muted">{candidate.candidate_id}</p>
           </div>
           <div className="flex items-center gap-3">
             <p className="font-mono text-sm text-ink">{formatScore(candidate.final_score)}</p>

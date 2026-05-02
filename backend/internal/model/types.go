@@ -51,6 +51,7 @@ type RecSysRequest struct {
 
 type FinalCandidate struct {
 	CandidateID string  `json:"candidate_id"`
+	DisplayName string  `json:"display_name"`
 	FinalScore  float64 `json:"final_score"`
 }
 

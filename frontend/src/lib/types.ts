@@ -6,11 +6,13 @@ export type RecommendationRequest = {
 
 export type Candidate = {
   candidate_id: string;
+  display_name?: string;
   final_score: number;
 };
 
 export type CandidateDetails = {
   candidate_id: string;
+  display_name: string;
   resume?: string | null;
   has_contacted?: boolean | null;
   has_replied?: boolean | null;
